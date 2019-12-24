@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="de.uni_stuttgart.ipvs.ids.test.TestCases" tests="3" skipped="0" failures="0" errors="0" timestamp="2018-12-14T16:27:36" hostname="ottob-ThinkPad" time="10.283">
+  <properties/>
+  <testcase name="test1" classname="de.uni_stuttgart.ipvs.ids.test.TestCases" time="0.047"/>
+  <testcase name="test2" classname="de.uni_stuttgart.ipvs.ids.test.TestCases" time="1.013"/>
+  <testcase name="test3" classname="de.uni_stuttgart.ipvs.ids.test.TestCases" time="9.221"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Replica 8: Setting read lock for /127.0.0.1:3404
+Replica 9: Setting read lock for /127.0.0.1:3404
+Replica 2: Setting read lock for /127.0.0.1:3404
+Replica 3: Setting read lock for /127.0.0.1:3404
+Replica 4: Setting read lock for /127.0.0.1:3404
+Replica 1: Setting read lock for /127.0.0.1:3404
+Replica 6: Setting read lock for /127.0.0.1:3404
+Replica 5: Setting read lock for /127.0.0.1:3404
+Replica 7: Setting read lock for /127.0.0.1:3404
+Replica 0: Setting read lock for /127.0.0.1:3404
+Replica 2: Executing Read request (READLOCK)
+Replica 2: Releasing read lock for /127.0.0.1:3404
+Replica 9: Releasing read lock for /127.0.0.1:3404
+Replica 8: Releasing read lock for /127.0.0.1:3404
+Replica 4: Releasing read lock for /127.0.0.1:3404
+Replica 3: Releasing read lock for /127.0.0.1:3404
+Replica 0: Releasing read lock for /127.0.0.1:3404
+Replica 6: Releasing read lock for /127.0.0.1:3404
+Replica 5: Releasing read lock for /127.0.0.1:3404
+Replica 7: Releasing read lock for /127.0.0.1:3404
+Replica 1: Releasing read lock for /127.0.0.1:3404
+Replica 0: Setting write lock for /127.0.0.1:3404
+Replica 1: Setting write lock for /127.0.0.1:3404
+Replica 2: Setting write lock for /127.0.0.1:3404
+Replica 3: Setting write lock for /127.0.0.1:3404
+Replica 4: Setting write lock for /127.0.0.1:3404
+Replica 5: Setting write lock for /127.0.0.1:3404
+Replica 6: Setting write lock for /127.0.0.1:3404
+Replica 7: Setting write lock for /127.0.0.1:3404
+Replica 9: Setting write lock for /127.0.0.1:3404
+Replica 8: Setting write lock for /127.0.0.1:3404
+Replica 1: Executing Write request (WRITELOCK)
+Replica 2: Executing Write request (WRITELOCK)
+Replica 3: Executing Write request (WRITELOCK)
+Replica 4: Executing Write request (WRITELOCK)
+Replica 5: Executing Write request (WRITELOCK)
+Replica 7: Executing Write request (WRITELOCK)
+Replica 6: Executing Write request (WRITELOCK)
+Replica 0: Executing Write request (WRITELOCK)
+Replica 9: Executing Write request (WRITELOCK)
+Replica 8: Executing Write request (WRITELOCK)
+Replica 0: Releasing write lock for /127.0.0.1:3404
+Replica 3: Releasing write lock for /127.0.0.1:3404
+Replica 2: Releasing write lock for /127.0.0.1:3404
+Replica 1: Releasing write lock for /127.0.0.1:3404
+Replica 4: Releasing write lock for /127.0.0.1:3404
+Replica 6: Releasing write lock for /127.0.0.1:3404
+Replica 7: Releasing write lock for /127.0.0.1:3404
+Replica 5: Releasing write lock for /127.0.0.1:3404
+Replica 8: Releasing write lock for /127.0.0.1:3404
+Replica 9: Releasing write lock for /127.0.0.1:3404
+Replica 1: Setting read lock for /127.0.0.1:3404
+Replica 3: Setting read lock for /127.0.0.1:3404
+Replica 4: Setting read lock for /127.0.0.1:3404
+Replica 0: Setting read lock for /127.0.0.1:3404
+Replica 2: Setting read lock for /127.0.0.1:3404
+Replica 5: Setting read lock for /127.0.0.1:3404
+Replica 6: Setting read lock for /127.0.0.1:3404
+Replica 7: Setting read lock for /127.0.0.1:3404
+Replica 9: Setting read lock for /127.0.0.1:3404
+Replica 8: Setting read lock for /127.0.0.1:3404
+Replica 3: Executing Read request (READLOCK)
+Replica 4: Releasing read lock for /127.0.0.1:3404
+Replica 3: Releasing read lock for /127.0.0.1:3404
+Replica 1: Releasing read lock for /127.0.0.1:3404
+Replica 2: Releasing read lock for /127.0.0.1:3404
+Replica 0: Releasing read lock for /127.0.0.1:3404
+Replica 5: Releasing read lock for /127.0.0.1:3404
+Replica 6: Releasing read lock for /127.0.0.1:3404
+Replica 7: Releasing read lock for /127.0.0.1:3404
+Replica 9: Releasing read lock for /127.0.0.1:3404
+Replica 8: Releasing read lock for /127.0.0.1:3404
+Replica 2: Crashed.
+Replica 3: Crashed.
+Replica 1: Crashed.
+Replica 0: Crashed.
+Replica 4: Crashed.
+Replica 5: Crashed.
+Replica 6: Crashed.
+Replica 9: Crashed.
+Replica 8: Crashed.
+Replica 7: Crashed.
+Replica 2: Setting read lock for /127.0.0.1:6404
+Replica 1: Crashed.
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 7: Crashed.
+Replica 8: Crashed.
+Replica 2: Executing Read request (READLOCK)
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 2: Releasing read lock for /127.0.0.1:6404
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 2: Setting read lock for /127.0.0.1:6404
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 8: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 2: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 8: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 2: Crashed.
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 8: Crashed.
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 1: Crashed.
+Replica 2: Setting read lock for /127.0.0.1:6404
+Replica 3: Crashed.
+Replica 4: Crashed.
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 8: Crashed.
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 2: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 2: Crashed.
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 8: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Crashed.
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 8: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 2: Crashed.
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 8: Setting read lock for /127.0.0.1:6404
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 8: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 2: Crashed.
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 8: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 9: Crashed.
+Replica 1: Executing Read request (READLOCK)
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 8: Releasing read lock for /127.0.0.1:6404
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 2: Crashed.
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 5: Crashed.
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 8: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 8: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 1: Setting read lock for /127.0.0.1:6404
+Replica 2: Crashed.
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Crashed.
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 8: Setting read lock for /127.0.0.1:6404
+Replica 9: Setting read lock for /127.0.0.1:6404
+Replica 0: Executing Read request (READLOCK)
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 1: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 8: Releasing read lock for /127.0.0.1:6404
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 9: Releasing read lock for /127.0.0.1:6404
+Replica 0: Setting read lock for /127.0.0.1:6404
+Replica 1: Crashed.
+Replica 2: Setting read lock for /127.0.0.1:6404
+Replica 4: Setting read lock for /127.0.0.1:6404
+Replica 3: Setting read lock for /127.0.0.1:6404
+Replica 5: Setting read lock for /127.0.0.1:6404
+Replica 6: Setting read lock for /127.0.0.1:6404
+Replica 7: Setting read lock for /127.0.0.1:6404
+Replica 8: Crashed.
+Replica 9: Crashed.
+Replica 0: Executing Read request (READLOCK)
+Replica 4: Releasing read lock for /127.0.0.1:6404
+Replica 0: Releasing read lock for /127.0.0.1:6404
+Replica 3: Releasing read lock for /127.0.0.1:6404
+Replica 2: Releasing read lock for /127.0.0.1:6404
+Replica 5: Releasing read lock for /127.0.0.1:6404
+Replica 6: Releasing read lock for /127.0.0.1:6404
+Replica 7: Releasing read lock for /127.0.0.1:6404
+]]></system-err>
+</testsuite>
