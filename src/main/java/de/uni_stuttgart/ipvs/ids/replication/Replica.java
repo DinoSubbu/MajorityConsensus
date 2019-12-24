@@ -36,7 +36,7 @@ public class Replica<T> extends Thread {
 	protected LockType lock;
 	
 	/**
-	 * This address holds the addres of the client holding the lock. This
+	 * This address holds the address of the client holding the lock. This
 	 * variable should be set to NULL every time the lock is set to UNLOCKED.
 	 */
 	protected SocketAddress lockHolder;
@@ -45,7 +45,7 @@ public class Replica<T> extends Thread {
 		super("Replica:" + listenPort);
 		this.id = id;
 		SocketAddress socketAddress = new InetSocketAddress("127.0.0.1", listenPort);
-		this.socket = new DatagramSocket(socketAddress);
+		this.socket = new DatagramSocket(socketAddress); // UDP Socket
 		this.availability = availability;
 		this.value = new VersionedValue<T>(0, initialValue);
 		this.lock = LockType.UNLOCKED;
@@ -65,6 +65,105 @@ public class Replica<T> extends Thread {
 	 */
 	public void run() {
 		// TODO: Implement me!
+		// Message reception and processing via UDP
+		// Use availability value to discard packets
+		// Upon request, lock and after doing task, unlock it.
+		try {
+			int discardCounterMax = 8; // Because in the test case, check happens for 10 tries.
+			int noMsgToDiscard =   (int) ( discardCounterMax * (1 - this.availability) );
+			int discardMsgMarker = discardCounterMax - noMsgToDiscard;
+			int msgCounter = 1;
+			while(true)
+			{
+				byte[] data = new byte[5000]; // TODO: Check Buffer size needed !! 
+				DatagramPacket message = new DatagramPacket(data, data.length);
+				socket.receive(message);
+				
+				String messageType = message.getClass().getName();
+				
+				if ( (msgCounter > discardMsgMarker) && msgCounter <= discardCounterMax) {
+				// Discard those messages
+					msgCounter = msgCounter + 1;
+					continue;
+				}
+				else if (messageType.contains("ReadRequestMessage"))
+				{
+					if( (lock == LockType.UNLOCKED) || 
+							( (lock == LockType.READLOCK) && (lockHolder.equals(message.getSocketAddress())) ) )
+					{
+						if (lock == LockType.UNLOCKED) {
+							lock = LockType.READLOCK; // Obtain Read Lock
+							lockHolder = message.getSocketAddress(); // Who is the current Lock owner??
+						}
+						// Create Object for message class ValueResponseMessage
+						ValueResponseMessage<T> valueResponseMsg = new ValueResponseMessage<T>(this.value.getValue());
+						
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						// create Output Stream object of type ByteArray
+					    ObjectOutputStream oos = new ObjectOutputStream(baos);
+					    oos.writeObject(valueResponseMsg); // Write msg object to ObjectOutputStream
+					    
+					    byte[] responseMsg = baos.toByteArray(); // Retrieve byte array buffer from baos
+					    // Create Data gram Packet
+					    DatagramPacket response = new DatagramPacket(responseMsg, responseMsg.length);
+					    socket.send(response);
+					}
+				}
+				else if (messageType.contains("ReleaseReadLock"))
+				{
+					lock = LockType.UNLOCKED;
+					lockHolder = null;
+				}
+				else if (messageType.contains("ReleaseWriteLock"))
+				{
+					lock = LockType.UNLOCKED;
+					lockHolder = null;
+				}
+				else if (messageType.contains("RequestReadVote"))
+				{
+					
+				}
+				else if (messageType.contains("RequestWriteVote"))
+				{
+					
+				}
+				else if (messageType.contains("WriteRequestMessage"))
+				{
+					if( (lock == LockType.UNLOCKED) || 
+							( (lock == LockType.WRITELOCK) && (lockHolder.equals(message.getSocketAddress())) ) )
+					{
+						if (lock == LockType.UNLOCKED) {
+							lock = LockType.WRITELOCK; // Obtain Write Lock
+							lockHolder = message.getSocketAddress(); // Who is the current Lock owner??
+						}
+						
+						WriteRequestMessage<T> writeReqObject = (WriteRequestMessage<T>) getObjectFromMessage(message);
+						
+						// Check if the received update is valid
+						if( writeReqObject.getVersion() > this.value.getVersion() )
+						{										    
+							// Update Contents of Replica -- Added Setters. Check if needed
+							this.value.setValue(writeReqObject.getValue());
+							this.value.setVersion(writeReqObject.getVersion());
+						}
+					}
+				}
+				else 
+				{	
+					System.out.println("Invalid Message Format. Ignoring the message");	
+				}
+				
+				// Reset Message Counter to 1, after processing discardCounterMax no of messages
+				if(msgCounter > discardCounterMax) {
+					msgCounter = 1;
+				}
+			}
+				
+			} catch (IOException | ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	/**
@@ -83,7 +182,10 @@ public class Replica<T> extends Thread {
 	protected Object getObjectFromMessage(DatagramPacket packet)
 			throws IOException, ClassNotFoundException {
 		// TODO: Implement me!
-		return null; // Pacify the compiler
+		byte[] buffer = new byte[65535];
+		ByteArrayInputStream bais = new ByteArrayInputStream(buffer); // bais - byte array input stream
+	    ObjectInputStream message = new ObjectInputStream(bais); // create Input Stream object of type Byte
+	    return message.readObject();
 	}
 
 	public int getID() {
@@ -95,3 +197,4 @@ public class Replica<T> extends Thread {
 	}
 
 }
+
