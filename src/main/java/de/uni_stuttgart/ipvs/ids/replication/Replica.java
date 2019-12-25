@@ -75,15 +75,15 @@ public class Replica<T> extends Thread {
 			int msgCounter = 1;
 			while(true)
 			{
-				byte[] data = new byte[5000]; // TODO: Check Buffer size needed !! 
+				byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 				DatagramPacket message = new DatagramPacket(data, data.length);
 				socket.receive(message);
-				
 				String messageType = message.getClass().getName();
-				
+
 				if ( (msgCounter > discardMsgMarker) && msgCounter <= discardCounterMax) {
 				// Discard those messages
 					msgCounter = msgCounter + 1;
+					// Don't send any response to the received message. Node Unavailability
 					continue;
 				}
 				else if (messageType.contains("ReadRequestMessage"))
@@ -104,28 +104,65 @@ public class Replica<T> extends Thread {
 					    oos.writeObject(valueResponseMsg); // Write msg object to ObjectOutputStream
 					    
 					    byte[] responseMsg = baos.toByteArray(); // Retrieve byte array buffer from baos
-					    // Create Data gram Packet
-					    DatagramPacket response = new DatagramPacket(responseMsg, responseMsg.length);
+					    // Create Data gram Packet and send response to lockholder
+					    DatagramPacket response = new DatagramPacket(responseMsg, responseMsg.length, lockHolder);
 					    socket.send(response);
+					    
+					    // Release Lock before exiting.
+					    lock = LockType.UNLOCKED;
+					    lockHolder = null;
+					}
+					else {
+						// Send NACK for the request
+						sendVote(message.getSocketAddress(), Vote.State.NACK, this.value.getVersion());
 					}
 				}
 				else if (messageType.contains("ReleaseReadLock"))
 				{
 					lock = LockType.UNLOCKED;
 					lockHolder = null;
+					// Send ACK for the request
+					sendVote(lockHolder, Vote.State.ACK, this.value.getVersion());
 				}
 				else if (messageType.contains("ReleaseWriteLock"))
 				{
 					lock = LockType.UNLOCKED;
 					lockHolder = null;
+					// Send ACK for the request
+					sendVote(lockHolder, Vote.State.ACK, this.value.getVersion());
 				}
 				else if (messageType.contains("RequestReadVote"))
 				{
+					if (lock != LockType.WRITELOCK) // TODO: Check this logic again!
+					{
+						lock = LockType.READLOCK;
+						lockHolder = message.getSocketAddress(); // Who is the current Lock owner??
+						
+						// Send positive Vote
+						sendVote(lockHolder, Vote.State.YES, this.value.getVersion());
+					}
+					else
+					{
+						// Send Negative Vote // sTODO: Check if version is needed for NO Vote
+						sendVote(lockHolder, Vote.State.NO, this.value.getVersion());
+					}
 					
 				}
 				else if (messageType.contains("RequestWriteVote"))
 				{
-					
+					if (lock == LockType.UNLOCKED) 
+					{
+						lock = LockType.WRITELOCK;
+						lockHolder = message.getSocketAddress(); // Who is the current Lock owner??
+						
+						// Send positive Vote
+						sendVote(lockHolder, Vote.State.YES, this.value.getVersion());
+					}
+					else
+					{
+						// Send Negative Vote // TODO: Check if version is needed for NO Vote
+						sendVote(lockHolder, Vote.State.NO, this.value.getVersion());
+					}
 				}
 				else if (messageType.contains("WriteRequestMessage"))
 				{
@@ -137,7 +174,7 @@ public class Replica<T> extends Thread {
 							lockHolder = message.getSocketAddress(); // Who is the current Lock owner??
 						}
 						
-						WriteRequestMessage<T> writeReqObject = (WriteRequestMessage<T>) getObjectFromMessage(message);
+						WriteRequestMessage<T> writeReqObject = (WriteRequestMessage<T>) getObjectFromMessage(data);
 						
 						// Check if the received update is valid
 						if( writeReqObject.getVersion() > this.value.getVersion() )
@@ -145,12 +182,21 @@ public class Replica<T> extends Thread {
 							// Update Contents of Replica -- Added Setters. Check if needed
 							this.value.setValue(writeReqObject.getValue());
 							this.value.setVersion(writeReqObject.getVersion());
+							// Send ACK for the request
+							sendVote(lockHolder, Vote.State.ACK, this.value.getVersion());
+						}
+						else 
+						{
+							// Send NACK for the request
+							sendVote(lockHolder, Vote.State.NACK, this.value.getVersion());
 						}
 					}
 				}
 				else 
 				{	
 					System.out.println("Invalid Message Format. Ignoring the message");	
+					// Send NACK for the request
+					sendVote(message.getSocketAddress(), Vote.State.NACK, this.value.getVersion());
 				}
 				
 				// Reset Message Counter to 1, after processing discardCounterMax no of messages
@@ -173,16 +219,30 @@ public class Replica<T> extends Thread {
 	protected void sendVote(SocketAddress address,
 			Vote.State state, int version) throws IOException {
 		// TODO: Implement me!
+		
+		// Create Object for message class Vote
+		Vote voteMsg = new Vote(state, version);
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// create Output Stream object of type ByteArray
+	    ObjectOutputStream oos = new ObjectOutputStream(baos);
+	    oos.writeObject(voteMsg); // Write msg object to ObjectOutputStream
+	    
+	    byte[] responseMsg = baos.toByteArray(); // Retrieve byte array buffer from baos
+	    
+	    // Create DataGram Packet and send vote to requester
+	    DatagramPacket vote = new DatagramPacket(responseMsg, responseMsg.length, address);
+	    socket.send(vote);
 	}
 
 	/**
 	 * This is a helper method. You can implement it if you want to use it or just ignore it.
 	 * Its purpose is to extract the object stored in a DatagramPacket.
 	 */
-	protected Object getObjectFromMessage(DatagramPacket packet)
+	protected Object getObjectFromMessage(byte[] buffer)
 			throws IOException, ClassNotFoundException {
 		// TODO: Implement me!
-		byte[] buffer = new byte[65535];
+		// From the buffer, reconstruct data object.
 		ByteArrayInputStream bais = new ByteArrayInputStream(buffer); // bais - byte array input stream
 	    ObjectInputStream message = new ObjectInputStream(bais); // create Input Stream object of type Byte
 	    return message.readObject();

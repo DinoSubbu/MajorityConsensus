@@ -9,7 +9,7 @@ public class Vote implements Serializable {
 	 */
 	private static final long serialVersionUID = -7977513854513072668L;
 
-	public enum State {YES, NO};
+	public enum State {YES, NO, ACK, NACK}; // ACK, NACK States added extra
 	
 	final protected State responseState;
 	final protected int version;

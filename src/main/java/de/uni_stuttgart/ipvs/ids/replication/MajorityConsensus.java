@@ -1,7 +1,9 @@
 package de.uni_stuttgart.ipvs.ids.replication;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,6 +13,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import de.uni_stuttgart.ipvs.ids.communication.MessageWithSource;
 import de.uni_stuttgart.ipvs.ids.communication.NonBlockingReceiver;
@@ -43,17 +47,66 @@ public class MajorityConsensus<T> {
 
 	/**
 	 * Part c) Implement this method.
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
-	protected Collection<MessageWithSource<Vote>> requestReadVote() throws QuorumNotReachedException {
+	protected Collection<MessageWithSource<Vote>> requestReadVote() throws QuorumNotReachedException, IOException, ClassNotFoundException {
 		// TODO: Implement me!
-		return null;
+		// Request read votes from all replicas until quorum is reached
+		// If not, throw Exception
+		Collection<MessageWithSource<Vote>> readVotes = new ArrayList<MessageWithSource<Vote>>();
+		Iterator iter = replicas.iterator();
+		while(iter.hasNext())
+		{
+			ReadRequestMessage readReqMsg = new ReadRequestMessage();
+			SocketAddress address = (SocketAddress) iter.next();
+			sendUDPPacket(readReqMsg, address);
+			
+			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
+			DatagramPacket message = new DatagramPacket(data, data.length);
+			socket.receive(message);
+			
+			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
+		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
+		    Vote vote = (Vote) is.readObject();
+		    
+		    MessageWithSource<Vote> msgWithSource = new MessageWithSource<Vote>(message.getSocketAddress(),vote);
+		    readVotes.add(msgWithSource);
+	
+		}
+		return readVotes;
 	}
 	
 	/**
 	 * Part c) Implement this method.
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
-	protected void releaseReadLock(Collection<SocketAddress> lockedReplicas) {
+	protected void releaseReadLock(Collection<SocketAddress> lockedReplicas) throws IOException, ClassNotFoundException {
 		// TODO: Implement me!
+		Iterator iter = lockedReplicas.iterator();
+		
+		while(iter.hasNext())
+		{
+			ReleaseReadLock releaseReadLockMsg = new ReleaseReadLock();
+			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
+			DatagramPacket message = new DatagramPacket(data, data.length);
+			
+			SocketAddress address = (SocketAddress) iter.next();
+			sendUDPPacket(releaseReadLockMsg, address);
+			socket.receive(message);
+			
+			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
+		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
+		    Vote vote = (Vote) is.readObject();
+		    
+		    if (vote.getState() == Vote.State.ACK) 
+		    {
+		    	System.out.println("Released Lock");
+				
+		    }
+			//TODO: Check if it's needed to read ACK message and retry unlock, if failed
+		}
 	}
 	
 	/**
@@ -73,10 +126,23 @@ public class MajorityConsensus<T> {
 	
 	/**
 	 * Part c) Implement this method.
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
-	protected T readReplica(SocketAddress replica) {
+	protected T readReplica(SocketAddress replica) throws IOException, ClassNotFoundException {
 		// TODO: Implement me!
-		return null;		
+		ReadRequestMessage readReqMsg = new ReadRequestMessage();
+		byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
+		DatagramPacket message = new DatagramPacket(data, data.length);
+		
+		sendUDPPacket(readReqMsg, replica);
+		socket.receive(message);
+		
+		ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
+	    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
+	    ValueResponseMessage<T> valueResponse = (ValueResponseMessage<T>) is.readObject();
+	    
+		return valueResponse.getValue();		
 	}
 	
 	/**
@@ -89,10 +155,38 @@ public class MajorityConsensus<T> {
 	/**
 	 * Part c) Implement this method (and checkQuorum(), see below) to read the
 	 * replicated value using the majority consensus protocol.
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
-	public VersionedValue<T> get() throws QuorumNotReachedException {
+	public VersionedValue<T> get() throws QuorumNotReachedException, ClassNotFoundException, IOException {
 		// TODO: Implement me!
-		return null;
+		int versionMax = 0;
+		int versionCurr;
+		
+		Collection<MessageWithSource<Vote>> readVoteReplies, positiveReplies;
+		Collection<SocketAddress> locksToRelease = new ArrayList<SocketAddress>();
+		
+		readVoteReplies = this.requestReadVote();
+		positiveReplies = this.checkQuorum(readVoteReplies);
+		SocketAddress replicaLatestValue = null;
+		
+		Iterator iter = positiveReplies.iterator();
+		while(iter.hasNext())
+		{
+			MessageWithSource<Vote> replica = (MessageWithSource<Vote>)iter.next();
+			locksToRelease.add(replica.getSource());
+			versionCurr = replica.getMessage().getVersion();
+			
+			if (versionCurr > versionMax) {
+				replicaLatestValue = replica.getSource();
+				versionMax = versionCurr;
+			}	
+		}
+		T valueLatest = this.readReplica(replicaLatestValue);
+		VersionedValue<T> valueWithVersion = new VersionedValue<T>(versionMax, valueLatest);
+		this.releaseReadLock(locksToRelease);
+		
+		return valueWithVersion;
 	}
 
 	/**
@@ -113,7 +207,46 @@ public class MajorityConsensus<T> {
 	protected Collection<MessageWithSource<Vote>> checkQuorum(
 			Collection<MessageWithSource<Vote>> replies) throws QuorumNotReachedException {
 		// TODO: Implement me!
-		return null;
+		
+		int quorumMinSize = (int) ( (this.replicas.size()/2) + 1) ;
+		Collection<SocketAddress> positiveRepliesAddr = new ArrayList<SocketAddress>();
+		Collection<MessageWithSource<Vote>> positiveRepliesMsg = new ArrayList<MessageWithSource<Vote>>();
+		Iterator iter = replies.iterator();
+		
+		while(iter.hasNext())
+		{
+			MessageWithSource<Vote> vote = (MessageWithSource<Vote>) iter.next();
+			if (vote.getMessage().getState() == Vote.State.YES) 
+		    {
+				positiveRepliesAddr.add(vote.getSource());
+				positiveRepliesMsg.add(vote);
+		    }
+		}
+		
+		if (positiveRepliesMsg.size() > quorumMinSize)
+		{
+			return positiveRepliesMsg;
+		}
+		else
+		{
+			throw new QuorumNotReachedException(quorumMinSize,positiveRepliesAddr);
+		}
+		
+	}
+	
+	// Helper Method to send UDP Packets
+	public <MsgType> void sendUDPPacket(MsgType msgToSend, SocketAddress address) throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// create Output Stream object of type ByteArray
+	    ObjectOutputStream oos = new ObjectOutputStream(baos);
+	    oos.writeObject(msgToSend); // Write message object to ObjectOutputStream
+	    
+	    byte[] msgInByteArray = baos.toByteArray(); // Retrieve byte array buffer from baos
+	    
+	    // Create DataGram Packet and send message to destination address
+	    DatagramPacket vote = new DatagramPacket(msgInByteArray, msgInByteArray.length, address);
+
 	}
 
 }
