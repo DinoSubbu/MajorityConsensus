@@ -50,7 +50,7 @@ public class MajorityConsensus<T> {
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
 	 */
-	protected Collection<MessageWithSource<Vote>> requestReadVote() throws QuorumNotReachedException, IOException, ClassNotFoundException {
+	protected Collection<MessageWithSource<Vote>> requestReadVote() throws QuorumNotReachedException {
 		// TODO: Implement me!
 		// Request read votes from all replicas until quorum is reached
 		// If not, throw Exception
@@ -60,15 +60,33 @@ public class MajorityConsensus<T> {
 		{
 			ReadRequestMessage readReqMsg = new ReadRequestMessage();
 			SocketAddress address = (SocketAddress) iter.next();
-			sendUDPPacket(readReqMsg, address);
-			
 			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 			DatagramPacket message = new DatagramPacket(data, data.length);
-			socket.receive(message);
+			Vote vote = null;
+			 
+		    String str = "Welcome java";  
+		   
+		     
+		    DatagramPacket dp = new DatagramPacket(str.getBytes(), str.length(),address);  
+		     
+			try {
+				
+			sendUDPPacket(readReqMsg, address);
 			
+			System.out.println("sending to"+String.valueOf(address.toString()));
+			
+			
+			socket.receive(message);
+			System.out.println("recieved readvote to ");
 			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
 		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
-		    Vote vote = (Vote) is.readObject();
+		    
+			
+				vote = (Vote) is.readObject();
+			} catch (ClassNotFoundException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		    
 		    MessageWithSource<Vote> msgWithSource = new MessageWithSource<Vote>(message.getSocketAddress(),vote);
 		    readVotes.add(msgWithSource);
@@ -129,18 +147,25 @@ public class MajorityConsensus<T> {
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
 	 */
-	protected T readReplica(SocketAddress replica) throws IOException, ClassNotFoundException {
+	protected T readReplica(SocketAddress replica)  {
 		// TODO: Implement me!
 		ReadRequestMessage readReqMsg = new ReadRequestMessage();
 		byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 		DatagramPacket message = new DatagramPacket(data, data.length);
-		
+		ValueResponseMessage<T> valueResponse=null;
+		try {
 		sendUDPPacket(readReqMsg, replica);
 		socket.receive(message);
 		
 		ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
 	    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
-	    ValueResponseMessage<T> valueResponse = (ValueResponseMessage<T>) is.readObject();
+	    
+		
+			valueResponse = (ValueResponseMessage<T>) is.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	    
 		return valueResponse.getValue();		
 	}
@@ -158,7 +183,7 @@ public class MajorityConsensus<T> {
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
 	 */
-	public VersionedValue<T> get() throws QuorumNotReachedException, ClassNotFoundException, IOException {
+	public VersionedValue<T> get() throws QuorumNotReachedException {
 		// TODO: Implement me!
 		int versionMax = 0;
 		int versionCurr;
@@ -184,7 +209,12 @@ public class MajorityConsensus<T> {
 		}
 		T valueLatest = this.readReplica(replicaLatestValue);
 		VersionedValue<T> valueWithVersion = new VersionedValue<T>(versionMax, valueLatest);
-		this.releaseReadLock(locksToRelease);
+		try {
+			this.releaseReadLock(locksToRelease);
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		return valueWithVersion;
 	}
@@ -246,7 +276,9 @@ public class MajorityConsensus<T> {
 	    
 	    // Create DataGram Packet and send message to destination address
 	    DatagramPacket vote = new DatagramPacket(msgInByteArray, msgInByteArray.length, address);
-
+	    DatagramSocket ds = new DatagramSocket(); 
+		ds.send(vote);
+		ds.close();
 	}
 
 }

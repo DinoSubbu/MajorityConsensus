@@ -45,7 +45,8 @@ public class Replica<T> extends Thread {
 		super("Replica:" + listenPort);
 		this.id = id;
 		SocketAddress socketAddress = new InetSocketAddress("127.0.0.1", listenPort);
-		this.socket = new DatagramSocket(socketAddress); // UDP Socket
+		this.socket = new DatagramSocket(socketAddress);
+		System.out.println("waiting on"+String.valueOf(this.socket.getLocalPort()));// UDP Socket
 		this.availability = availability;
 		this.value = new VersionedValue<T>(0, initialValue);
 		this.lock = LockType.UNLOCKED;
@@ -73,13 +74,17 @@ public class Replica<T> extends Thread {
 			int noMsgToDiscard =   (int) ( discardCounterMax * (1 - this.availability) );
 			int discardMsgMarker = discardCounterMax - noMsgToDiscard;
 			int msgCounter = 1;
+			
 			while(true)
 			{
 				byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 				DatagramPacket message = new DatagramPacket(data, data.length);
-				socket.receive(message);
-				String messageType = message.getClass().getName();
-
+				
+				this.socket.receive(message);
+				
+				String messageType = getObjectFromMessage(message.getData()).getClass().getName();
+				
+				System.out.println("msg = "+messageType);
 				if ( (msgCounter > discardMsgMarker) && msgCounter <= discardCounterMax) {
 				// Discard those messages
 					msgCounter = msgCounter + 1;
@@ -209,8 +214,9 @@ public class Replica<T> extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		
 		}
-	}
+	
 	
 	/**
 	 * This is a helper method. You can implement it if you want to use it or just ignore it.
