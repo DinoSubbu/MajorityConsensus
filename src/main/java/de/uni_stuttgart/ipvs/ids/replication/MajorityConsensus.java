@@ -58,7 +58,11 @@ public class MajorityConsensus<T> {
 		Iterator iter = replicas.iterator();
 		while(iter.hasNext())
 		{
+<<<<<<< HEAD
 			RequestReadVote reqReadVote = new RequestReadVote();
+=======
+			RequestReadVote reqReadVoteMsg = new RequestReadVote();
+>>>>>>> 03fcd40a290a2de73a6cb077a325c1efb694a13e
 			SocketAddress address = (SocketAddress) iter.next();
 			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 			DatagramPacket message = new DatagramPacket(data, data.length);
@@ -66,13 +70,21 @@ public class MajorityConsensus<T> {
 			    		     
 			try {
 				
+<<<<<<< HEAD
 			sendUDPPacket(reqReadVote, address);
+=======
+			sendUDPPacket(reqReadVoteMsg, address);
+>>>>>>> 03fcd40a290a2de73a6cb077a325c1efb694a13e
 			
 			System.out.println("sending to"+String.valueOf(address.toString()));
 			
 			socket.receive(message);
+<<<<<<< HEAD
 			//String msg = new String(message.getData(), message.getOffset(), message.getLength());
 			//System.out.println(msg);
+=======
+			System.out.println("received readvote to ");
+>>>>>>> 03fcd40a290a2de73a6cb077a325c1efb694a13e
 			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
 		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
 		
@@ -130,14 +142,83 @@ public class MajorityConsensus<T> {
 	 */
 	protected Collection<MessageWithSource<Vote>> requestWriteVote() throws QuorumNotReachedException {
 		// TODO: Implement me!
-		return null;
+		Collection<MessageWithSource<Vote>> writeVotes = new ArrayList<MessageWithSource<Vote>>();
+		Iterator iter = replicas.iterator();
+		while(iter.hasNext())
+		{
+			RequestWriteVote reqWriteVoteMsg = new RequestWriteVote();
+			SocketAddress address = (SocketAddress) iter.next();
+			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
+			DatagramPacket message = new DatagramPacket(data, data.length);
+			Vote vote = null;
+			 
+		    String str = "Welcome java";  
+		   
+		     
+		    DatagramPacket dp = new DatagramPacket(str.getBytes(), str.length(),address);  
+		     
+			try {
+				
+			sendUDPPacket(reqWriteVoteMsg, address);
+			
+			System.out.println("sending to"+String.valueOf(address.toString()));
+			
+			socket.receive(message);
+			System.out.println("recieved readvote to ");
+			
+			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
+		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
+		    
+			vote = (Vote) is.readObject();
+			
+			MessageWithSource<Vote> msgWithSource = new MessageWithSource<Vote>(message.getSocketAddress(),vote);
+		    writeVotes.add(msgWithSource);
+			
+			} catch (ClassNotFoundException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		    
+	
+		}
+		return writeVotes;
 	}
 	
 	/**
 	 * Part d) Implement this method.
+	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
-	protected void releaseWriteLock(Collection<SocketAddress> lockedReplicas) {
+	protected void releaseWriteLock(Collection<SocketAddress> lockedReplicas) throws IOException, ClassNotFoundException {
 		// TODO: Implement me!
+		Iterator iter = lockedReplicas.iterator();
+		
+		while(iter.hasNext())
+		{
+			ReleaseWriteLock releaseWriteLockMsg = new ReleaseWriteLock();
+			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
+			DatagramPacket message = new DatagramPacket(data, data.length);
+			
+			SocketAddress address = (SocketAddress) iter.next();
+			try {
+				sendUDPPacket(releaseWriteLockMsg, address);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			socket.receive(message);
+			
+			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
+		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
+		    Vote vote = (Vote) is.readObject();
+		    
+		    if (vote.getState() == Vote.State.ACK) 
+		    {
+		    	System.out.println("Released Lock");
+				
+		    }
+			//TODO: Check if it's needed to read ACK message and retry unlock, if failed
+		}
 	}
 	
 	/**
@@ -173,6 +254,34 @@ public class MajorityConsensus<T> {
 	 */
 	protected void writeReplicas(Collection<SocketAddress> lockedReplicas, VersionedValue<T> newValue) {
 		// TODO: Implement me!
+		Iterator iter = lockedReplicas.iterator();
+		while(iter.hasNext())
+		{
+			WriteRequestMessage writeReqMsg = new WriteRequestMessage(newValue);
+			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
+			DatagramPacket message = new DatagramPacket(data, data.length);
+			try {
+				SocketAddress address = (SocketAddress) iter.next();
+				sendUDPPacket(writeReqMsg, address);
+				socket.receive(message);
+				
+				ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
+			    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
+			    
+			    Vote vote = (Vote) is.readObject();
+			    if (vote.getState() == Vote.State.ACK) 
+			    {
+			    	System.out.println("Write Successful");
+					
+			    }
+			    else {
+			    	System.out.println("Failed to Write");
+			    }
+			} catch (ClassNotFoundException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
 	}
 	
 	/**
@@ -224,6 +333,35 @@ public class MajorityConsensus<T> {
 	 */
 	public void set(T value) throws QuorumNotReachedException {
 		// TODO: Implement me!
+		int versionMax = 0;
+		int versionCurr;
+		
+		Collection<MessageWithSource<Vote>> writeVoteReplies, positiveReplies;
+		Collection<SocketAddress> locksToRelease = new ArrayList<SocketAddress>();
+		
+		writeVoteReplies = this.requestWriteVote();
+		positiveReplies = this.checkQuorum(writeVoteReplies);
+		
+		Iterator iter = positiveReplies.iterator();
+		while(iter.hasNext())
+		{
+			MessageWithSource<Vote> replica = (MessageWithSource<Vote>)iter.next();
+			locksToRelease.add(replica.getSource());
+			versionCurr = replica.getMessage().getVersion();
+			
+			if (versionCurr > versionMax) {
+				versionMax = versionCurr;
+			}	
+		}
+		VersionedValue<T> valueWithVersion = new VersionedValue<T>(versionMax+1, value);
+		this.writeReplicas(locksToRelease, valueWithVersion);
+		try {
+			this.releaseWriteLock(locksToRelease);
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**
