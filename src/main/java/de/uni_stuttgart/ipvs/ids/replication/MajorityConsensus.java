@@ -58,36 +58,34 @@ public class MajorityConsensus<T> {
 		Iterator iter = replicas.iterator();
 		while(iter.hasNext())
 		{
-			ReadRequestMessage readReqMsg = new ReadRequestMessage();
+			RequestReadVote reqReadVote = new RequestReadVote();
 			SocketAddress address = (SocketAddress) iter.next();
 			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 			DatagramPacket message = new DatagramPacket(data, data.length);
 			Vote vote = null;
-			 
-		    String str = "Welcome java";  
-		   
-		     
-		    DatagramPacket dp = new DatagramPacket(str.getBytes(), str.length(),address);  
-		     
+			    		     
 			try {
 				
-			sendUDPPacket(readReqMsg, address);
+			sendUDPPacket(reqReadVote, address);
 			
 			System.out.println("sending to"+String.valueOf(address.toString()));
 			
-			
 			socket.receive(message);
-			System.out.println("recieved readvote to ");
+			//String msg = new String(message.getData(), message.getOffset(), message.getLength());
+			//System.out.println(msg);
 			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
 		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
-		    
-			
-				vote = (Vote) is.readObject();
+		
+		    //System.out.println("vote:"+is.readObject().toString());
+		    	vote = (Vote) is.readObject();
+		    	
+		    	
 			} catch (ClassNotFoundException | IOException e) {
 				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			}
-		    
+			System.out.println("suc");
 		    MessageWithSource<Vote> msgWithSource = new MessageWithSource<Vote>(message.getSocketAddress(),vote);
 		    readVotes.add(msgWithSource);
 	
@@ -207,6 +205,7 @@ public class MajorityConsensus<T> {
 				versionMax = versionCurr;
 			}	
 		}
+		System.out.println(versionMax);
 		T valueLatest = this.readReplica(replicaLatestValue);
 		VersionedValue<T> valueWithVersion = new VersionedValue<T>(versionMax, valueLatest);
 		try {
@@ -252,6 +251,7 @@ public class MajorityConsensus<T> {
 				positiveRepliesMsg.add(vote);
 		    }
 		}
+		System.out.println(positiveRepliesMsg.size());
 		
 		if (positiveRepliesMsg.size() > quorumMinSize)
 		{
@@ -276,9 +276,17 @@ public class MajorityConsensus<T> {
 	    
 	    // Create DataGram Packet and send message to destination address
 	    DatagramPacket vote = new DatagramPacket(msgInByteArray, msgInByteArray.length, address);
-	    DatagramSocket ds = new DatagramSocket(); 
-		ds.send(vote);
-		ds.close();
+	    
+		this.socket.send(vote);
+		
+	}
+	protected Object getObjectFromMessage(byte[] buffer)
+			throws IOException, ClassNotFoundException {
+		// TODO: Implement me!
+		// From the buffer, reconstruct data object.
+		ByteArrayInputStream bais = new ByteArrayInputStream(buffer); // bais - byte array input stream
+	    ObjectInputStream message = new ObjectInputStream(bais); // create Input Stream object of type Byte
+	    return message.readObject();
 	}
 
 }

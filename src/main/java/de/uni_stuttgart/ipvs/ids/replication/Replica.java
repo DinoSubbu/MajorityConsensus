@@ -46,7 +46,7 @@ public class Replica<T> extends Thread {
 		this.id = id;
 		SocketAddress socketAddress = new InetSocketAddress("127.0.0.1", listenPort);
 		this.socket = new DatagramSocket(socketAddress);
-		System.out.println("waiting on"+String.valueOf(this.socket.getLocalPort()));// UDP Socket
+		// UDP Socket
 		this.availability = availability;
 		this.value = new VersionedValue<T>(0, initialValue);
 		this.lock = LockType.UNLOCKED;
@@ -69,6 +69,7 @@ public class Replica<T> extends Thread {
 		// Message reception and processing via UDP
 		// Use availability value to discard packets
 		// Upon request, lock and after doing task, unlock it.
+		System.out.println("waiting on"+String.valueOf(this.socket.getLocalPort()));
 		try {
 			int discardCounterMax = 8; // Because in the test case, check happens for 10 tries.
 			int noMsgToDiscard =   (int) ( discardCounterMax * (1 - this.availability) );
@@ -93,10 +94,13 @@ public class Replica<T> extends Thread {
 				}
 				else if (messageType.contains("ReadRequestMessage"))
 				{
+					
 					if( (lock == LockType.UNLOCKED) || 
 							( (lock == LockType.READLOCK) && (lockHolder.equals(message.getSocketAddress())) ) )
 					{
+						
 						if (lock == LockType.UNLOCKED) {
+							
 							lock = LockType.READLOCK; // Obtain Read Lock
 							lockHolder = message.getSocketAddress(); // Who is the current Lock owner??
 						}
@@ -110,8 +114,9 @@ public class Replica<T> extends Thread {
 					    
 					    byte[] responseMsg = baos.toByteArray(); // Retrieve byte array buffer from baos
 					    // Create Data gram Packet and send response to lockholder
+					    System.out.println("lockHolder="+lockHolder.toString());
 					    DatagramPacket response = new DatagramPacket(responseMsg, responseMsg.length, lockHolder);
-					    socket.send(response);
+					    this.socket.send(response);
 					    
 					    // Release Lock before exiting.
 					    lock = LockType.UNLOCKED;
