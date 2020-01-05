@@ -20,7 +20,7 @@ import org.junit.rules.Timeout;
 public class TestCases {
     
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(30);
+    public Timeout globalTimeout = Timeout.seconds(300);
     
     
     @Test
@@ -106,7 +106,7 @@ public class TestCases {
         MajorityConsensus<Double> mc = new MajorityConsensus<Double>(replicaAddrs, 6404);
 
         double a =  availabilityCheck(mc, 10);
-        assertTrue(a > 0);
+        assertTrue(a > 0.0);
     }
     
     public static double availabilityCheck(MajorityConsensus<Double> mc, int tries) {

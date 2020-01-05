@@ -69,27 +69,36 @@ public class Replica<T> extends Thread {
 		// Message reception and processing via UDP
 		// Use availability value to discard packets
 		// Upon request, lock and after doing task, unlock it.
-		System.out.println("waiting on"+String.valueOf(this.socket.getLocalPort()));
+		//System.out.println("waiting on"+String.valueOf(this.socket.getLocalPort()));
 		try {
-			int discardCounterMax = 8; // Because in the test case, check happens for 10 tries.
+			/*int discardCounterMax = 8; // Because in the test case, check happens for 10 tries.
 			int noMsgToDiscard =   (int) ( discardCounterMax * (1 - this.availability) );
 			int discardMsgMarker = discardCounterMax - noMsgToDiscard;
+			System.out.println("discardmarker :"+String.valueOf(discardMsgMarker));
+			System.out.println("Random doubles: " + Math.random());*/
 			int msgCounter = 1;
 			
 			while(true)
 			{
 				byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 				DatagramPacket message = new DatagramPacket(data, data.length);
-				
+				//System.out.println("msgcount="+String.valueOf(msgCounter));
+				msgCounter = msgCounter + 1;
 				this.socket.receive(message);
-				
+				double randome = Math.random();
 				String messageType = getObjectFromMessage(message.getData()).getClass().getName();
 				
-				System.out.println("msg = "+messageType);
-				if ( (msgCounter > discardMsgMarker) && msgCounter <= discardCounterMax) {
+				System.out.println(String.valueOf(this.id)+"msg = "+messageType);
+				/*if ( (msgCounter > discardMsgMarker) && msgCounter <= discardCounterMax) {
 				// Discard those messages
+					System.out.println("discard");
 					msgCounter = msgCounter + 1;
 					// Don't send any response to the received message. Node Unavailability
+					continue;
+				}*/
+				if(randome >= (double)this.availability && (lock == LockType.UNLOCKED)) {
+					
+					System.out.println("discard id no."+ String.valueOf(this.id)+" "+String.valueOf(randome));
 					continue;
 				}
 				else if (messageType.contains("ReadRequestMessage"))
@@ -132,14 +141,14 @@ public class Replica<T> extends Thread {
 					lock = LockType.UNLOCKED;
 					lockHolder = null;
 					// Send ACK for the request
-					sendVote(lockHolder, Vote.State.ACK, this.value.getVersion());
+					sendVote(message.getSocketAddress(), Vote.State.ACK, this.value.getVersion());
 				}
 				else if (messageType.contains("ReleaseWriteLock"))
 				{
 					lock = LockType.UNLOCKED;
 					lockHolder = null;
 					// Send ACK for the request
-					sendVote(lockHolder, Vote.State.ACK, this.value.getVersion());
+					sendVote(message.getSocketAddress(), Vote.State.ACK, this.value.getVersion());
 				}
 				else if (messageType.contains("RequestReadVote"))
 				{
@@ -194,6 +203,9 @@ public class Replica<T> extends Thread {
 							this.value.setVersion(writeReqObject.getVersion());
 							// Send ACK for the request
 							sendVote(lockHolder, Vote.State.ACK, this.value.getVersion());
+							// Release Lock before exiting.
+						    lock = LockType.UNLOCKED;
+						    lockHolder = null;
 						}
 						else 
 						{
@@ -201,6 +213,7 @@ public class Replica<T> extends Thread {
 							sendVote(lockHolder, Vote.State.NACK, this.value.getVersion());
 						}
 					}
+					 
 				}
 				else 
 				{	
@@ -210,9 +223,9 @@ public class Replica<T> extends Thread {
 				}
 				
 				// Reset Message Counter to 1, after processing discardCounterMax no of messages
-				if(msgCounter > discardCounterMax) {
-					msgCounter = 1;
-				}
+				//if(msgCounter > discardCounterMax) {
+				//	msgCounter = 1;
+				//}
 			}
 				
 			} catch (IOException | ClassNotFoundException e) {

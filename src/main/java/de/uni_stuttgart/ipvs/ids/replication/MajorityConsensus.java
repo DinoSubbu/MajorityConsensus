@@ -42,6 +42,7 @@ public class MajorityConsensus<T> {
 		this.replicas = replicas;
 		SocketAddress address = new InetSocketAddress("127.0.0.1", port);
 		this.socket = new DatagramSocket(address);
+		this.socket.setSoTimeout(TIMEOUT);
 		this.nbio = new NonBlockingReceiver(socket);
 	}
 
@@ -58,48 +59,39 @@ public class MajorityConsensus<T> {
 		Iterator iter = replicas.iterator();
 		while(iter.hasNext())
 		{
-<<<<<<< HEAD
-			RequestReadVote reqReadVote = new RequestReadVote();
-=======
+
+			
 			RequestReadVote reqReadVoteMsg = new RequestReadVote();
->>>>>>> 03fcd40a290a2de73a6cb077a325c1efb694a13e
+
 			SocketAddress address = (SocketAddress) iter.next();
 			byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 			DatagramPacket message = new DatagramPacket(data, data.length);
 			Vote vote = null;
 			    		     
 			try {
-				
-<<<<<<< HEAD
-			sendUDPPacket(reqReadVote, address);
-=======
 			sendUDPPacket(reqReadVoteMsg, address);
->>>>>>> 03fcd40a290a2de73a6cb077a325c1efb694a13e
-			
-			System.out.println("sending to"+String.valueOf(address.toString()));
+			//System.out.println("sending to"+String.valueOf(address.toString()));
 			
 			socket.receive(message);
-<<<<<<< HEAD
-			//String msg = new String(message.getData(), message.getOffset(), message.getLength());
-			//System.out.println(msg);
-=======
+			//nbio.receiveMessages(100, 1);
+			
 			System.out.println("received readvote to ");
->>>>>>> 03fcd40a290a2de73a6cb077a325c1efb694a13e
+			
 			ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
 		    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
 		
 		    //System.out.println("vote:"+is.readObject().toString());
 		    	vote = (Vote) is.readObject();
+		    	MessageWithSource<Vote> msgWithSource = new MessageWithSource<Vote>(message.getSocketAddress(),vote);
+			    readVotes.add(msgWithSource);
 		    	
-		    	
-			} catch (ClassNotFoundException | IOException e) {
+			} catch (ClassNotFoundException | IOException  e) {
 				// TODO Auto-generated catch block
 				
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
-			System.out.println("suc");
-		    MessageWithSource<Vote> msgWithSource = new MessageWithSource<Vote>(message.getSocketAddress(),vote);
-		    readVotes.add(msgWithSource);
+			//System.out.println("suc");
+		    
 	
 		}
 		return readVotes;
@@ -161,7 +153,7 @@ public class MajorityConsensus<T> {
 				
 			sendUDPPacket(reqWriteVoteMsg, address);
 			
-			System.out.println("sending to"+String.valueOf(address.toString()));
+			
 			
 			socket.receive(message);
 			System.out.println("recieved readvote to ");
@@ -176,7 +168,7 @@ public class MajorityConsensus<T> {
 			
 			} catch (ClassNotFoundException | IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		    
 	
@@ -232,9 +224,13 @@ public class MajorityConsensus<T> {
 		byte[] data = new byte[10000]; // TODO: Check Buffer size needed !! 
 		DatagramPacket message = new DatagramPacket(data, data.length);
 		ValueResponseMessage<T> valueResponse=null;
+		
 		try {
+		
 		sendUDPPacket(readReqMsg, replica);
+		
 		socket.receive(message);
+		
 		
 		ByteArrayInputStream bais = new ByteArrayInputStream(message.getData()); // bais - byte array input stream
 	    ObjectInputStream is = new ObjectInputStream(bais); // create Input Stream object of type Byte
@@ -243,7 +239,8 @@ public class MajorityConsensus<T> {
 			valueResponse = (ValueResponseMessage<T>) is.readObject();
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			//return null;
 		}
 	    
 		return valueResponse.getValue();		
@@ -279,7 +276,7 @@ public class MajorityConsensus<T> {
 			    }
 			} catch (ClassNotFoundException | IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		}	
 	}
@@ -302,6 +299,7 @@ public class MajorityConsensus<T> {
 		positiveReplies = this.checkQuorum(readVoteReplies);
 		SocketAddress replicaLatestValue = null;
 		
+		
 		Iterator iter = positiveReplies.iterator();
 		while(iter.hasNext())
 		{
@@ -309,19 +307,23 @@ public class MajorityConsensus<T> {
 			locksToRelease.add(replica.getSource());
 			versionCurr = replica.getMessage().getVersion();
 			
-			if (versionCurr > versionMax) {
+			if (versionCurr >= versionMax) {
 				replicaLatestValue = replica.getSource();
+				
 				versionMax = versionCurr;
 			}	
+				
 		}
-		System.out.println(versionMax);
+		System.out.println("fin send"+String.valueOf(replicaLatestValue));
+		
 		T valueLatest = this.readReplica(replicaLatestValue);
+		
 		VersionedValue<T> valueWithVersion = new VersionedValue<T>(versionMax, valueLatest);
 		try {
 			this.releaseReadLock(locksToRelease);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		return valueWithVersion;
@@ -359,7 +361,7 @@ public class MajorityConsensus<T> {
 			this.releaseWriteLock(locksToRelease);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 	}
@@ -389,10 +391,13 @@ public class MajorityConsensus<T> {
 				positiveRepliesMsg.add(vote);
 		    }
 		}
-		System.out.println(positiveRepliesMsg.size());
+		
+		
 		
 		if (positiveRepliesMsg.size() > quorumMinSize)
 		{
+			System.out.println(positiveRepliesMsg.size());
+			System.out.println(quorumMinSize);
 			return positiveRepliesMsg;
 		}
 		else
